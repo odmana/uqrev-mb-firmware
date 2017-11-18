@@ -8,6 +8,8 @@
 #ifndef TEMP_H_
 #define TEMP_H_
 
+#define TEMP_SENSOR_COUNT 18
+
 void temp_init();
 void temp_process();
 

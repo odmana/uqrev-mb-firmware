@@ -12,5 +12,6 @@
 
 void debug_init();
 void debug_log(const char* format, ...);
+void debug_log_n(const char* format, ...);
 
 #endif /* DEBUG_C_ */
