@@ -85,6 +85,12 @@
 #define TEMP_0_GPIO_Port GPIOB
 #define STATUS_LED_Pin GPIO_PIN_8
 #define STATUS_LED_GPIO_Port GPIOC
+#define MUX_A_Pin GPIO_PIN_10
+#define MUX_A_GPIO_Port GPIOC
+#define MUX_B_Pin GPIO_PIN_11
+#define MUX_B_GPIO_Port GPIOC
+#define MUX_C_Pin GPIO_PIN_12
+#define MUX_C_GPIO_Port GPIOC
 
 /* ########################## Assert Selection ############################## */
 /**

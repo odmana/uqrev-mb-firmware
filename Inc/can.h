@@ -8,7 +8,7 @@
 #ifndef CAN_H_
 #define CAN_H_
 
-#include "stdint.h";
+#include "stdint.h"
 
 typedef union _group_64 {
 	float data_fp[2];
