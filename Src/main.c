@@ -81,7 +81,7 @@ static void MX_CAN_Init(void);
 /* USER CODE END 0 */
 
 int main(void)
-{
+ {
 
   /* USER CODE BEGIN 1 */
 

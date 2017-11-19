@@ -21,7 +21,7 @@ uint32_t adc_data_full[TEMP_SENSOR_COUNT];
 uint32_t adc1_data[9];
 uint32_t adc2_data[7];
 uint32_t adc3_data[2];
-float temps[TEMP_SENSOR_COUNT];
+int32_t temps[TEMP_MUX_LEVELS][TEMP_SENSOR_COUNT];
 
 uint8_t adc1_data_ready = 0;
 uint8_t adc2_data_ready = 0;
@@ -37,21 +37,43 @@ void change_mux_level(uint8_t level);
 
 void temp_process() {
 	can_variables can;
+	uint8_t max_level, min_level, max_cell, min_cell;
+	int32_t max_temp = 0, min_temp = 100;
 
 	if (adc1_data_ready && adc2_data_ready && adc3_data_ready) {
+		// 1. Convert temps to C
 		for (int i = 0; i < TEMP_SENSOR_COUNT; i++) {
-			// 1. Convert temps to C
-			temps[i] = calculate_temp(adc_data_full[i]);
+			temps[current_mux_level][i] = (int32_t)(calculate_temp(adc_data_full[i]) * 100);
+		}
 
-			// 2. Send over-temps over can
-			if (temps[i] >= TEMP_WARN_THRESHOLD) {
-				//		can.address = 0x300;
-				//		can.length = 8;
-				//		can.data.data_fp[1] = 420.69f;
-				//		can.data.data_u16[0] = 0xCAFE;
-				//		can_send(&can);
+		// 2. Find and send temp data over CAN
+		for (int j = 0; j < TEMP_MUX_LEVELS; j++) {
+			for (int k = 0; k < TEMP_SENSOR_COUNT; k++) {
+				// Set max details
+				if (temps[j][k] > max_temp) {
+					max_level = j;
+					max_cell = k;
+					max_temp = temps[j][k];
+				}
+				// Set min details
+				if (temps[j][k] < min_temp) {
+					min_level = j;
+					min_cell = k;
+					min_temp = temps[j][k];
+				}
 			}
 		}
+
+		can.address = CAN_MB_BASE;
+		can.length = 8;
+		can.data.data_u8[0] = max_cell;
+		can.data.data_u8[1] = max_level;
+		can.data.data_16[1] = max_temp;
+		can.data.data_u8[4] = min_cell;
+		can.data.data_u8[5] = min_level;
+		can.data.data_16[3] = min_temp;
+		can_send(&can);
+
 
 		log_status();
 
@@ -112,7 +134,7 @@ void log_status() {
 	debug_log_n("[Level %d]\t", current_mux_level);
 	for (int i = 0; i < TEMP_SENSOR_COUNT; i++) {
 //		debug_log_n("%d: %d, ", i, adc_data_full[i]);
-		debug_log_n("%d: %d, ", i, (int32_t)(temps[i] * 100));
+		debug_log_n("%d: %d, ", i, temps[current_mux_level][i]);
 	}
 	debug_log_n("\n");
 }

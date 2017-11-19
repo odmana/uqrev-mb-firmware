@@ -11,7 +11,6 @@
 #include "stdint.h"
 
 #define TEMP_SENSOR_COUNT 				18
-#define TEMP_WARN_THRESHOLD 			65
 #define TEMP_MUX_LEVELS 				4
 
 // Calculator: https://edwardmallon.files.wordpress.com/2017/04/ntc-steinhart_and_hart_calculator.xls

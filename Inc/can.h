@@ -10,14 +10,16 @@
 
 #include "stdint.h"
 
+#define CAN_MB_BASE		0x300
+
 typedef union _group_64 {
 	float data_fp[2];
-	unsigned char data_u8[8];
-	char data_8[8];
-	unsigned int data_u16[4];
-	int data_16[4];
-	unsigned long data_u32[2];
-	long data_32[2];
+	uint8_t data_u8[8];
+	int8_t data_8[8];
+	uint16_t data_u16[4];
+	int16_t data_16[4];
+	uint32_t data_u32[2];
+	int32_t data_32[2];
 } group_64;
 
 typedef struct _can_variables {
