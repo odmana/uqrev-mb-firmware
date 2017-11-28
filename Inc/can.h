@@ -12,22 +12,22 @@
 #include "main.h"
 
 #ifdef MB_1
-#define CAN_MB_BASE		0x5E1
-#endif
-#ifdef MB_2
 #define CAN_MB_BASE		0x5E2
 #endif
-#ifdef MB_3
+#ifdef MB_2
 #define CAN_MB_BASE		0x5E3
 #endif
-#ifdef MB_4
+#ifdef MB_3
 #define CAN_MB_BASE		0x5E4
 #endif
-#ifdef MB_5
+#ifdef MB_4
 #define CAN_MB_BASE		0x5E5
 #endif
-#ifdef MB_6
+#ifdef MB_5
 #define CAN_MB_BASE		0x5E6
+#endif
+#ifdef MB_6
+#define CAN_MB_BASE		0x5E7
 #endif
 
 typedef union _group_64 {

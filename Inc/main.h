@@ -44,12 +44,12 @@
 /* USER CODE BEGIN Includes */
 
 // Motherboard number
-#define MB_1
+//#define MB_1
 //#define MB_2
 //#define MB_3
 //#define MB_4
 //#define MB_5
-//#define MB_6
+#define MB_6
 
 /* USER CODE END Includes */
 

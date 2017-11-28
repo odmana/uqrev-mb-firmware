@@ -81,7 +81,7 @@ static void MX_CAN_Init(void);
 /* USER CODE END 0 */
 
 int main(void)
- {
+{
 
   /* USER CODE BEGIN 1 */
 
@@ -472,7 +472,7 @@ static void MX_CAN_Init(void)
 {
 
   hcan.Instance = CAN;
-  hcan.Init.Prescaler = 4;
+  hcan.Init.Prescaler = 16;
   hcan.Init.Mode = CAN_MODE_NORMAL;
   hcan.Init.SJW = CAN_SJW_1TQ;
   hcan.Init.BS1 = CAN_BS1_13TQ;
@@ -536,7 +536,7 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pins : STATUS_LED_Pin MUX_A_Pin MUX_B_Pin MUX_C_Pin */
   GPIO_InitStruct.Pin = STATUS_LED_Pin|MUX_A_Pin|MUX_B_Pin|MUX_C_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
