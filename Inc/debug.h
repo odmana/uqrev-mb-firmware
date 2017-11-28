@@ -8,7 +8,7 @@
 #ifndef DEBUG_C_
 #define DEBUG_C_
 
-#define DEBUG
+// #define DEBUG
 
 void debug_init();
 void debug_log(const char* format, ...);

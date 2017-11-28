@@ -13,6 +13,77 @@
 #include "math.h"
 #include "stdlib.h"
 
+
+/* Offesets to fix stuff */
+#ifdef MB_1
+uint32_t const CHANNEL_ENABLE[4] = {
+		0xFFFFFFFF,
+		0xFFFFFFFF,
+		0xFFFFFFFF,
+		0xFFFFFFFF
+};
+uint16_t const P_ON_RES[18] = { 0, 0, 0, 0, 0, 0, 7151, 0, 7151, 0, 7151, 0, 7151, 7151, 7151, 7151, 7151, 0 };
+float scale_m = 1;
+float scale_b = 0;
+#endif
+#ifdef MB_2
+uint32_t const CHANNEL_ENABLE[4] = {
+		0xFFFFFFFF,
+		0xFFFFFFFF,
+		0xFFFFFBFF,
+		0xFFFFFBFF
+};
+uint16_t const P_ON_RES[18] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+float scale_m = 1.5;
+float scale_b = 6;
+#endif
+#ifdef MB_3
+uint32_t const CHANNEL_ENABLE[4] = {
+		0xFFFFFFEF,
+		0xFFFFFDEF,
+		0xFFFFFDEF,
+		0xFFFFFFEF
+};
+uint16_t const P_ON_RES[18] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+float scale_m = 1.7437;
+float scale_b = 4.5713;
+#endif
+#ifdef MB_4
+uint32_t const CHANNEL_ENABLE[4] = {
+		0xFFFF7FFD,
+		0xFFFF7FFD,
+		0xFFFFFFFF,
+		0xFFFFFFFF
+};
+uint16_t const P_ON_RES[18] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+float scale_m = 1.3;
+float scale_b = 10;
+#endif
+#ifdef MB_5
+uint32_t const CHANNEL_ENABLE[4] = {
+		0xFFFF7FEF,
+		0xFFFF76EF,
+		0xFFFF7FEF,
+		0xFFFF7FEF
+};
+uint16_t const P_ON_RES[18] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+float scale_m = 1.3;
+float scale_b = 13;
+#endif
+#ifdef MB_6
+uint32_t const CHANNEL_ENABLE[4] = {
+		0xFFFFFFBF,
+		0xFFFFFFBF,
+		0xFFFFFFBF,
+		0xFFFFFFBF
+};
+uint16_t const P_ON_RES[18] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+float scale_m = 0.8767;
+float scale_b = 22.336;
+#endif
+/* End offsets */
+
+
 extern ADC_HandleTypeDef hadc1;
 extern ADC_HandleTypeDef hadc2;
 extern ADC_HandleTypeDef hadc3;
@@ -31,7 +102,7 @@ uint8_t mux_levels[TEMP_MUX_LEVELS] = { 6, 0, 7, 3 };
 uint8_t current_mux_level = 0;
 
 void log_status();
-float calculate_temp(uint32_t adc_val);
+float calculate_temp(uint32_t adc_val, uint16_t offset);
 void change_mux_level(uint8_t level);
 
 
@@ -43,7 +114,8 @@ void temp_process() {
 	if (adc1_data_ready && adc2_data_ready && adc3_data_ready) {
 		// 1. Convert temps to C
 		for (int i = 0; i < TEMP_SENSOR_COUNT; i++) {
-			temps[current_mux_level][i] = (int32_t)(calculate_temp(adc_data_full[i]) * 100);
+			if (CHANNEL_ENABLE[current_mux_level] & (1 << i))
+				temps[current_mux_level][i] = (int32_t)(calculate_temp(adc_data_full[i], P_ON_RES[i]) * 100);
 		}
 
 		// 2. Find and send temp data over CAN
@@ -69,9 +141,10 @@ void temp_process() {
 		can.data.data_u8[0] = max_cell;
 		can.data.data_u8[1] = max_level;
 		can.data.data_16[1] = max_temp;
-		can.data.data_u8[4] = min_cell;
-		can.data.data_u8[5] = min_level;
-		can.data.data_16[3] = min_temp;
+		can.data.data_fp[1] = max_temp;
+//		can.data.data_u8[4] = min_cell;
+//		can.data.data_u8[5] = min_level;
+//		can.data.data_16[3] = min_temp;
 		can_send(&can);
 
 
@@ -98,9 +171,10 @@ void temp_process() {
 }
 
 
-float calculate_temp(uint32_t adc_val) {
+float calculate_temp(uint32_t adc_val, uint16_t offset) {
 	double temp_cal;
 	double res = (float)(adc_val * TEMP_FIXED_RESISTOR) / (float)(ADC_MAX - adc_val);
+	res = res - offset;
 	double log_res = log(res);
 
 	//	The commented are for testing purpose - leave here
@@ -111,6 +185,9 @@ float calculate_temp(uint32_t adc_val) {
 	//	temp_cal = 1.0 / temp_cal;
 
 	temp_cal = 1 / (TEMP_A + TEMP_B*log_res + TEMP_C*log_res*log_res*log_res ) - TEMP_ZERO;
+
+	/* ****** */
+	temp_cal = (scale_m * temp_cal) + scale_b;
 
 	return temp_cal;
 }
