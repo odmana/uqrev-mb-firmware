@@ -55,6 +55,8 @@ DMA_HandleTypeDef hdma_adc3;
 
 CAN_HandleTypeDef hcan;
 
+TIM_HandleTypeDef htim2;
+
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 extern int adc1_data_ready;
@@ -70,6 +72,7 @@ static void MX_ADC3_Init(void);
 static void MX_ADC2_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_CAN_Init(void);
+static void MX_TIM2_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -109,6 +112,7 @@ int main(void)
   MX_ADC2_Init();
   MX_ADC1_Init();
   MX_CAN_Init();
+  MX_TIM2_Init();
 
   /* USER CODE BEGIN 2 */
   debug_init();
@@ -126,7 +130,7 @@ int main(void)
 	  temp_process();
 
 	  HAL_GPIO_TogglePin(STATUS_LED_GPIO_Port, STATUS_LED_Pin);
-	  HAL_Delay(500);
+	  HAL_Delay(125);
   }
   /* USER CODE END 3 */
 
@@ -484,6 +488,39 @@ static void MX_CAN_Init(void)
   hcan.Init.RFLM = DISABLE;
   hcan.Init.TXFP = DISABLE;
   if (HAL_CAN_Init(&hcan) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+}
+
+/* TIM2 init function */
+static void MX_TIM2_Init(void)
+{
+
+  TIM_ClockConfigTypeDef sClockSourceConfig;
+  TIM_MasterConfigTypeDef sMasterConfig;
+
+  htim2.Instance = TIM2;
+  htim2.Init.Prescaler = 249;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim2.Init.Period = 63999;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }

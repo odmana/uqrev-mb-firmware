@@ -12,6 +12,7 @@
 
 #define TEMP_SENSOR_COUNT 				18
 #define TEMP_MUX_LEVELS 				4
+#define TEMP_AVG_LENGTH 				5
 
 // Calculator: https://edwardmallon.files.wordpress.com/2017/04/ntc-steinhart_and_hart_calculator.xls
 // 2017 Sensor: NCU18XH103E6SRB

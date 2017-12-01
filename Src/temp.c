@@ -87,12 +87,13 @@ float scale_b = 22.336;
 extern ADC_HandleTypeDef hadc1;
 extern ADC_HandleTypeDef hadc2;
 extern ADC_HandleTypeDef hadc3;
+extern TIM_HandleTypeDef htim2;
 
 uint32_t adc_data_full[TEMP_SENSOR_COUNT];
 uint32_t adc1_data[9];
 uint32_t adc2_data[7];
 uint32_t adc3_data[2];
-int32_t temps[TEMP_MUX_LEVELS][TEMP_SENSOR_COUNT];
+int32_t temps[TEMP_MUX_LEVELS][TEMP_SENSOR_COUNT][TEMP_AVG_LENGTH];
 
 uint8_t adc1_data_ready = 0;
 uint8_t adc2_data_ready = 0;
@@ -100,6 +101,7 @@ uint8_t adc3_data_ready = 0;
 
 uint8_t mux_levels[TEMP_MUX_LEVELS] = { 6, 0, 7, 3 };
 uint8_t current_mux_level = 0;
+uint8_t current_avg_level = 0;
 
 void log_status();
 float calculate_temp(uint32_t adc_val, uint16_t offset);
@@ -115,23 +117,29 @@ void temp_process() {
 		// 1. Convert temps to C
 		for (int i = 0; i < TEMP_SENSOR_COUNT; i++) {
 			if (CHANNEL_ENABLE[current_mux_level] & (1 << i))
-				temps[current_mux_level][i] = (int32_t)(calculate_temp(adc_data_full[i], P_ON_RES[i]) * 100);
+				temps[current_mux_level][i][current_avg_level] = (int32_t)(calculate_temp(adc_data_full[i], P_ON_RES[i]) * 100);
 		}
 
 		// 2. Find and send temp data over CAN
-		for (int j = 0; j < TEMP_MUX_LEVELS; j++) {
-			for (int k = 0; k < TEMP_SENSOR_COUNT; k++) {
+		for (int l = 0; l < TEMP_MUX_LEVELS; l++) {
+			for (int c = 0; c < TEMP_SENSOR_COUNT; c++) {
+				int32_t avg_temp = 0;
+				for (int a = 0; a < TEMP_AVG_LENGTH; a++) {
+					avg_temp += temps[l][c][a];
+				}
+				avg_temp /= TEMP_AVG_LENGTH;
+
 				// Set max details
-				if (temps[j][k] > max_temp) {
-					max_level = j;
-					max_cell = k;
-					max_temp = temps[j][k];
+				if (avg_temp > max_temp) {
+					max_level = l;
+					max_cell = c;
+					max_temp = avg_temp;
 				}
 				// Set min details
-				if (temps[j][k] < min_temp) {
-					min_level = j;
-					min_cell = k;
-					min_temp = temps[j][k];
+				if (avg_temp < min_temp) {
+					min_level = l;
+					min_cell = c;
+					min_temp = avg_temp;
 				}
 			}
 		}
@@ -155,9 +163,10 @@ void temp_process() {
 				adc1_data_ready, adc2_data_ready, adc3_data_ready);
 	}
 
-	// 3. Change MUX level
+	// 3. Change MUX level and avg filter level
 	current_mux_level = ++current_mux_level % TEMP_MUX_LEVELS;
 	change_mux_level(mux_levels[current_mux_level]);
+	current_avg_level = ++current_avg_level % TEMP_AVG_LENGTH;
 
 	// Reset flags
 	adc1_data_ready = 0;
@@ -211,7 +220,7 @@ void log_status() {
 	debug_log_n("[Level %d]\t", current_mux_level);
 	for (int i = 0; i < TEMP_SENSOR_COUNT; i++) {
 //		debug_log_n("%d: %d, ", i, adc_data_full[i]);
-		debug_log_n("%d: %d, ", i, temps[current_mux_level][i]);
+		debug_log_n("%d: %d, ", i, temps[current_mux_level][i][current_avg_level]);
 	}
 	debug_log_n("\n");
 }
@@ -276,4 +285,24 @@ void temp_init() {
 	if (HAL_ADC_Start_IT(&hadc3) != HAL_OK)
 		Error_Handler();
 	HAL_Delay(1);
+
+	// Start timer
+	if (HAL_TIM_Base_Start_IT(&htim2) != HAL_OK) {
+		/* Starting Error */
+		Error_Handler();
+	}
+}
+
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+//	static uint8_t first_flag = 1;
+//
+//	// timer is triggered when it is started
+//	if (first_flag) {
+//		first_flag = 0;
+//		return;
+//	}
+//
+//	temp_process();
+
 }
