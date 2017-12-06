@@ -39,10 +39,10 @@ float scale_b = 6;
 #endif
 #ifdef MB_3
 uint32_t const CHANNEL_ENABLE[4] = {
-		0xFFFFFFEF,
-		0xFFFFFDEF,
-		0xFFFFFDEF,
-		0xFFFFFFEF
+		0xFFFF7FEF,
+		0xFFFF7DEF,
+		0xFFFF7DEF,
+		0xFFFF7FEF
 };
 uint16_t const P_ON_RES[18] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 float scale_m = 1.7437;
