@@ -21,6 +21,7 @@
 #define TEMP_C 							0.000000178336340
 #define TEMP_FIXED_RESISTOR 			10000
 #define TEMP_ZERO			 			273.15
+#define TEMP_CLAMP						10000
 #define ADC_MAX 						4096
 
 void temp_init();

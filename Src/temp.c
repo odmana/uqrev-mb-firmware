@@ -111,13 +111,18 @@ void change_mux_level(uint8_t level);
 void temp_process() {
 	can_variables can;
 	uint8_t max_level, min_level, max_cell, min_cell;
-	int32_t max_temp = 0, min_temp = 100;
+	int32_t max_temp = 0, min_temp = 100, measured_temp = 0;
 
 	if (adc1_data_ready && adc2_data_ready && adc3_data_ready) {
 		// 1. Convert temps to C
 		for (int i = 0; i < TEMP_SENSOR_COUNT; i++) {
-			if (CHANNEL_ENABLE[current_mux_level] & (1 << i))
-				temps[current_mux_level][i][current_avg_level] = (int32_t)(calculate_temp(adc_data_full[i], P_ON_RES[i]) * 100);
+			if (CHANNEL_ENABLE[current_mux_level] & (1 << i)) {
+				// 1.1 Clamp measured temp and add it into a moving average filter
+				measured_temp = (int32_t)(calculate_temp(adc_data_full[i], P_ON_RES[i]) * 100);
+				temps[current_mux_level][i][current_avg_level] = measured_temp > TEMP_CLAMP
+						? TEMP_CLAMP
+						: measured_temp;
+			}
 		}
 
 		// 2. Find and send temp data over CAN
